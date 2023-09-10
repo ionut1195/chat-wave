@@ -1,0 +1,6 @@
+alembic
+alembic.ini
+.vscode
+backend/.env
+backend/__pycache__
+frontend/node_modules
