@@ -17,10 +17,10 @@ export const getCurrentUserInfo = (token: string) => {
   }
 };
 
-export const isExpired = (timestamp: number): boolean => {
+export const isExpired = (timestamp: number | undefined): boolean => {
   const currentTimestamp = Date.now() / 1000;
 
-  return timestamp < currentTimestamp;
+  return timestamp ? timestamp < currentTimestamp : false;
 };
 
 export type LoginContextType = {

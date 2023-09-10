@@ -4,7 +4,8 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosResponse,
 } from "axios";
-import { Navigate } from "react-router-dom";
+import { getCurrentUserInfo, isExpired } from "../state/LoginContext";
+import { createBrowserHistory } from "history";
 
 const API_URL = process.env.REACT_APP_BASE_API_ENDPOINT;
 
@@ -41,9 +42,17 @@ export const setupInterceptorsTo = (
         "detail" in data &&
         data.detail === "Could not validate credentials"
       ) {
+        console.log("intercepted?");
+        debugger;
         let storedRefreshToken = localStorage.getItem("refresh_token");
-        if (!storedRefreshToken) {
-          Navigate({ to: "/logout" });
+        let expired: boolean = false;
+        if (storedRefreshToken) {
+          const currentUserInfo = getCurrentUserInfo(storedRefreshToken);
+          if (isExpired(currentUserInfo?.exp)) expired = true;
+        }
+        if (!storedRefreshToken || expired) {
+          const history = createBrowserHistory();
+          history.push("/logout");
         }
         try {
           const rs = await axios.post(`${API_URL}refresh`, {
