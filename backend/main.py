@@ -1,17 +1,24 @@
-from fastapi import Depends, FastAPI, HTTPException, WebSocketException, status,  WebSocket, WebSocketDisconnect
+from fastapi import Cookie, Depends, FastAPI, HTTPException, WebSocketException, status,  WebSocket, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated, List, Union
 from datetime import timedelta
-from schemas import User, UserCreate, NewUser, Token, Conversation, ConversationUpdate, ConversationCreate
+
+from fastapi.websockets import WebSocketState
+from schemas import User, UserCreate, NewUser, Token, Conversation, ConversationUpdate, ConversationCreate, MessageCreate, UserReturnType
 from auth import Token, get_current_user, authenticate_user, create_token, get_refreshed_token
-from crud import get_user_by_email, create_user, get_users, delete_user, get_user, get_conversation, get_user_conversations, create_conversation, delete_conversation
-from database import get_db, Base, engine
+from crud import get_user_by_email, create_user, get_users, delete_user, get_user, get_conversation, get_user_conversations, create_conversation, delete_conversation, create_message, get_message, delete_message
+from database import get_db, Base, engine, SessionLocal
 from sqlalchemy.orm import Session
-import base64
 import json
-
 from fastapi.middleware.cors import CORSMiddleware
+# from models import Message, Conversation, User, association_table
 
+# db = SessionLocal()
+# db.query(association_table).delete()
+# db.query(Message).delete()
+# db.query(Conversation).delete()
+# db.query(User).delete()
+# db.commit()
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -64,7 +71,7 @@ async def read_users_me(
     return current_user
 
 
-@app.get("/users", response_model=List[User])
+@app.get("/users", response_model=List[UserReturnType])
 def get_all_users(db: Session = Depends(get_db)):
     users = get_users(db)
     if len(users):
@@ -85,12 +92,18 @@ def delete_conversation_by_id(id: int, db: Session = Depends(get_db)):
     return delete_conversation(db, conversation)
 
 
+@app.delete("/message/{id}")
+def delete_message_by_id(id: int, db: Session = Depends(get_db)):
+    message = get_message(db=db, message_id=id)
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
+    return delete_message(db, message)
+
+
 def get_conversation_name(participants: List[int], db: Session):
     first_user = get_user(db, participants[0])
-    if len(participants) < 2:
-        return first_user.username
-    else:
-        second_user = get_user(db, participants[1])
+    second_user = get_user(db, participants[1])
     return f"{first_user.username}, {second_user.username} + {len(participants) -1} others"
 
 
@@ -101,10 +114,11 @@ def create_new_conversation(
     db: Session = Depends(get_db)
 ):
     users = list(new_conversation.users)
+    conversation_name = None
     if new_conversation.name is not None:
         conversation_name = new_conversation.name
-    else:
-        conversation_name = get_conversation_name(users, db)
+    if len(users) > 2:
+        new_conversation.name = get_conversation_name(users, db)
     users.append(current_user.id)
     conversation_to_add = ConversationCreate(
         users=users,
@@ -171,36 +185,93 @@ def get_user_by_id(user_id: int, current_user: Annotated[User, Depends(get_curre
     return get_user(db, user_id)
 
 
-@app.websocket("/conversation/{conversation_id}/ws")
-async def websocket_endpoint(websocket: WebSocket, conversation_id: int,  db: Session = Depends(get_db)):
-    await websocket.accept()
-    try:
-        # if not current_user:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_401_UNAUTHORIZED,
-        #         detail="Invalid access token",
-        #         headers={"WWW-Authenticate": "Bearer"},
-        #     )
-        while True:
-            data: dict = json.loads(await websocket.receive_text())
-            print(data)
-            conversation = get_conversation(conversation_id, db)
-            if not conversation:
-                raise WebSocketException("Conversation not found", close=4001)
-            # user_id = data.get("id")
-            # user_message = data.get("message")
-            # user_files = data.get("files")
-            # for file in user_files:
-            #     content = file.get("content")
-            #     filename = file.get("filename")
-            #     if content and filename:
-            #         file_bytes = base64.b64decode(content)
-            #         with open(f"uploads/{filename}", "wb") as f:
-            #             f.write(file_bytes)
+# @app.websocket("/conversation/{conversation_id}/ws")
+# async def websocket_endpoint(websocket: WebSocket, conversation_id: int,  db: Session = Depends(get_db)):
+#     await websocket.accept()
+#     try:
+#         # if not current_user:
+#         #     raise HTTPException(
+#         #         status_code=status.HTTP_401_UNAUTHORIZED,
+#         #         detail="Invalid access token",
+#         #         headers={"WWW-Authenticate": "Bearer"},
+#         #     )
+#         while True:
+#             data: dict = json.loads(await websocket.receive_text())
+#             print(data)
+#             conversation = get_conversation(conversation_id, db)
+#             if not conversation:
+#                 raise WebSocketException("Conversation not found", close=4001)
+#             # user_id = data.get("id")
+#             # user_message = data.get("message")
+#             # user_files = data.get("files")
+#             # for file in user_files:
+#             #     content = file.get("content")
+#             #     filename = file.get("filename")
+#             #     if content and filename:
+#             #         file_bytes = base64.b64decode(content)
+#             #         with open(f"uploads/{filename}", "wb") as f:
+#             #             f.write(file_bytes)
 
-            # print("Received files from user", user_id)
-    except WebSocketDisconnect:
-        print("WebSocket connection closed")
+#             # print("Received files from user", user_id)
+#     except WebSocketDisconnect:
+#         print("WebSocket connection closed")
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            if not connection.client_state == WebSocketState.DISCONNECTED:
+                await connection.send_text(message)
+
+
+manager = ConnectionManager()
+
+
+@app.websocket("/conversation/{conversation_id}/ws")
+async def websocket_endpoint(websocket: WebSocket, conversation_id: int, token: str = Cookie(None), db: Session = Depends(get_db)):
+    await manager.connect(websocket)
+    db = SessionLocal()
+    try:
+        data = await websocket.receive_text()
+        token = json.loads(data).get("token")
+
+        current_user = await get_current_user(token=token, db=db)
+
+        if not current_user:
+            raise HTTPException(status_code=400, detail="Invalid token")
+        try:
+            while True:
+                data: dict = json.loads(await websocket.receive_text())
+                user_message = data.get("message")
+
+                # Create a new message and add it to the database
+                message_create = MessageCreate(
+                    content=user_message, conversation_id=conversation_id, user_id=current_user.id, user_name=current_user.username)
+                created_message = create_message(db=db, message=message_create)
+
+                # Broadcast the message to all connected clients
+
+                await manager.broadcast(json.dumps({"content": created_message.content, "conversation_id": created_message.conversation_id, "created_at": created_message.created_at.strftime('%Y-%m-%d %H:%M:%S'), "id": created_message.id, "user_id": created_message.user_id, "user_name": created_message.user_name}))
+
+        except WebSocketDisconnect:
+            print("WebSocket connection closed")
+            # Remove the websocket from the list of connected clients
+            manager.disconnect(websocket)
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     import uvicorn
