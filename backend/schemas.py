@@ -1,22 +1,26 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
 
 class MessageBase(BaseModel):
     content: str
-    files: list[str] = []
 
 
 class MessageCreate(MessageBase):
-    pass
+    content: str
+    conversation_id: int
+    user_id: int
+    user_name: str
 
 
 class Message(MessageBase):
     id: int
-
-    class Confirg:
-        orm_mode = True
+    content: str
+    created_at: datetime
+    conversation_id: int
+    user_id: int
+    user_name: str
 
 
 class UserBase(BaseModel):
@@ -37,6 +41,11 @@ class User(UserBase):
         orm_mode: True
 
 
+class UserReturnType(BaseModel):
+    id: int
+    username: str
+
+
 class NewUser(UserBase):
     username: str
     access_token: str
@@ -48,7 +57,7 @@ class ConversationBase(BaseModel):
 
 
 class ConversationCreate(ConversationBase):
-    name: str = None
+    name: Union[str, None] = None
 
 
 class ConversationUpdate(ConversationBase):
@@ -57,7 +66,7 @@ class ConversationUpdate(ConversationBase):
 
 class Conversation(ConversationBase):
     id: int
-    name: str
+    name: Union[str, None]
     messages: list[str] = []
     created_at: datetime
     users: List[User]

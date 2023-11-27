@@ -18,7 +18,11 @@ def get_users(db: Session, offset: int = 0, limit: int = 100):
 
 
 def get_user_messages(db: Session, user_id: int, offset: int = 0, limit: int = 100):
-    return db.query(models.Message).filter(models.Message.user == user_id).offset(offset).limit(limit).all()
+    return db.query(models.Message).filter(models.Message.user_id == user_id).offset(offset).limit(limit).all()
+
+
+def get_message(db: Session, message_id: int):
+    return db.query(models.Message).filter(models.Message.id == message_id).first()
 
 
 def delete_user(db: Session, user):
@@ -39,10 +43,17 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 def create_message(db: Session, message: schemas.MessageCreate):
     db_message = models.Message(
-        content=message.content, sender_id=message.sender_id, receiver_ids=message.receiver_ids)
+        content=message.content, user_id=message.user_id, conversation_id=message.conversation_id, user_name=message.user_name)
     db.add(db_message)
     db.commit()
     db.refresh(db_message)
+    return db_message
+
+
+def delete_message(db: Session, message):
+    db.delete(message)
+    db.commit()
+    return "Message deleted!"
 
 
 def create_conversation(db: Session, conversation: schemas.ConversationCreate):
@@ -72,4 +83,4 @@ def get_user_conversations(db: Session, user_id: int, offset: int = 0, limit: in
 def delete_conversation(db: Session, conversation):
     db.delete(conversation)
     db.commit()
-    return f"User '{conversation.name}' deleted!"
+    return f"Conversation '{conversation.name}' deleted!"
