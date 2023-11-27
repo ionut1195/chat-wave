@@ -3,7 +3,7 @@ import { LoginContext } from "../LoginContext";
 import axios from "axios";
 
 export const useRefreshToken = () => {
-  const { setIsLoggedIn } = useContext(LoginContext);
+  const { logOut } = useContext(LoginContext);
   const refreshToken = async (refresh_token: string) => {
     try {
       const response = await axios.post(
@@ -14,7 +14,8 @@ export const useRefreshToken = () => {
         return response.data.access_token;
       }
     } catch (error) {
-      setIsLoggedIn(false);
+      console.log("userefreshtoken ");
+      logOut();
     }
   };
   return { refreshToken };

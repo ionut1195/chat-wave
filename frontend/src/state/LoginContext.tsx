@@ -27,14 +27,24 @@ export type LoginContextType = {
   isLoggedIn: boolean;
   setIsLoggedIn: (value: boolean) => void;
   currentUser: string | undefined;
+  logOut: () => void;
+  setCurrentUser: (user: string) => void;
 };
 
 export const LoginContext = createContext({} as LoginContextType);
 LoginContext.displayName = "LoginContext";
+
 const LoginContextProvider = ({ children }: { children: React.ReactNode }) => {
   const { refreshToken } = useRefreshToken();
   const [isLogged, setIsLogged] = useState(false);
   const [currentUser, setCurrentUser] = useState<string>();
+
+  const logOut = () => {
+    setCurrentUser(undefined);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setIsLogged(false);
+  };
 
   useEffect(() => {
     (async function () {
@@ -49,16 +59,19 @@ const LoginContextProvider = ({ children }: { children: React.ReactNode }) => {
               await refreshToken(storedRefreshToken)
                 .then((access_token) => {
                   localStorage.setItem("access_token", access_token);
+                  setIsLogged(true);
                 })
                 .catch((err) => {
-                  setIsLogged(false);
+                  logOut();
                 });
             }
+          } else {
+            setIsLogged(true);
           }
-          setIsLogged(true);
         }
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -67,6 +80,8 @@ const LoginContextProvider = ({ children }: { children: React.ReactNode }) => {
         isLoggedIn: isLogged,
         setIsLoggedIn: (value: boolean) => setIsLogged(value),
         currentUser: currentUser,
+        logOut,
+        setCurrentUser: (user) => setCurrentUser(user),
       }}
     >
       {children}
