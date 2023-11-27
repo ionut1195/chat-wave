@@ -42,8 +42,6 @@ export const setupInterceptorsTo = (
         "detail" in data &&
         data.detail === "Could not validate credentials"
       ) {
-        console.log("intercepted?");
-        debugger;
         let storedRefreshToken = localStorage.getItem("refresh_token");
         let expired: boolean = false;
         if (storedRefreshToken) {
@@ -53,6 +51,7 @@ export const setupInterceptorsTo = (
         if (!storedRefreshToken || expired) {
           const history = createBrowserHistory();
           history.push("/logout");
+          return;
         }
         try {
           const rs = await axios.post(`${API_URL}refresh`, {
