@@ -1,25 +1,18 @@
-import React from "react";
+import React, { useContext } from "react";
 import { MessageType } from "../../state/recoil/selectors/MyConversations";
 import { TbChevronDown } from "react-icons/tb";
 import { Popover } from "@mui/material";
 import { api } from "../../services/api";
-import { currentUserState } from "../../state/recoil/atoms/CurrentUser";
-import { useRecoilState } from "recoil";
+import { LoginContext } from "../../state/LoginContext";
 
 type PropsType = {
   message: MessageType;
   removeMesssageFromList: (messageId: number) => void;
-  // isAuthor: boolean;
   showAuthor: boolean;
 };
 const Message = React.forwardRef<HTMLDivElement, PropsType>((props, ref) => {
-  const {
-    message,
-    removeMesssageFromList,
-    // isAuthor = false,
-    showAuthor = false,
-  } = props;
-  const [username] = useRecoilState(currentUserState);
+  const { message, removeMesssageFromList, showAuthor = false } = props;
+  const { currentUser } = useContext(LoginContext);
   const [anchorElement, setAnchorElement] = React.useState<SVGElement | null>(
     null
   );
@@ -27,19 +20,17 @@ const Message = React.forwardRef<HTMLDivElement, PropsType>((props, ref) => {
   const handleClose = () => {
     setAnchorElement(null);
   };
-  console.log(message.user_name);
-  console.log(username);
-  console.log(message.user_name === username);
+
   return (
     <div
       ref={ref}
       className={`relative flex min-w-0 max-w-full flex-col gap-2 text-white ${
-        message.user_name === username
+        message.user_name === currentUser
           ? "self-end bg-[#128C7E]"
           : "self-start bg-[#646464]"
       } rounded-lg p-4 m-2`}
     >
-      {message.user_name === username ? (
+      {message.user_name === currentUser ? (
         <div>
           <TbChevronDown
             onClick={(e) => {

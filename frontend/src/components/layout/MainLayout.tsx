@@ -4,9 +4,9 @@ import MainNavigation from "./MainNavigation";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <Container>
-      <div className="flex container mx-auto">
-        <div className="w-[20%] bg-green-200">
+    <Container className="h-full">
+      <div className="flex container h-full mx-auto">
+        <div className="w-[20%] h-full bg-green-200">
           <MainNavigation />
         </div>
         {children}
