@@ -4,3 +4,4 @@ alembic.ini
 backend/.env
 backend/__pycache__
 frontend/node_modules
+base64Conversion.tsx
