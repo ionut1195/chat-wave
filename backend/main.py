@@ -26,7 +26,7 @@ app = FastAPI()
 Base.metadata.create_all(engine)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://chat-wave-wheat.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -183,38 +183,6 @@ def get_user_by_id(user_id: int, current_user: Annotated[User, Depends(get_curre
     if not current_user:
         return
     return get_user(db, user_id)
-
-
-# @app.websocket("/conversation/{conversation_id}/ws")
-# async def websocket_endpoint(websocket: WebSocket, conversation_id: int,  db: Session = Depends(get_db)):
-#     await websocket.accept()
-#     try:
-#         # if not current_user:
-#         #     raise HTTPException(
-#         #         status_code=status.HTTP_401_UNAUTHORIZED,
-#         #         detail="Invalid access token",
-#         #         headers={"WWW-Authenticate": "Bearer"},
-#         #     )
-#         while True:
-#             data: dict = json.loads(await websocket.receive_text())
-#             print(data)
-#             conversation = get_conversation(conversation_id, db)
-#             if not conversation:
-#                 raise WebSocketException("Conversation not found", close=4001)
-#             # user_id = data.get("id")
-#             # user_message = data.get("message")
-#             # user_files = data.get("files")
-#             # for file in user_files:
-#             #     content = file.get("content")
-#             #     filename = file.get("filename")
-#             #     if content and filename:
-#             #         file_bytes = base64.b64decode(content)
-#             #         with open(f"uploads/{filename}", "wb") as f:
-#             #             f.write(file_bytes)
-
-#             # print("Received files from user", user_id)
-#     except WebSocketDisconnect:
-#         print("WebSocket connection closed")
 
 
 class ConnectionManager:
