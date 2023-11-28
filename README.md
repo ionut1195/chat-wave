@@ -1,1 +1,1 @@
-# working app, will be deployed today
+# app can be run locally / to be deployed soon
