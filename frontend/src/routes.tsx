@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import MainLayout from "./components/Layout/MainLayout";
+import MainLayout from "./components/Layout/Layout";
 import LogoutPage from "./features/LogoutPage";
 import ConversationPage from "./features/ConversationPage/ConversationPage";
 import { CONVERSATIONS_BASE_PATH } from "./utils/routes";
