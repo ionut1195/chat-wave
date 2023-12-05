@@ -11,14 +11,6 @@ from database import get_db, Base, engine, SessionLocal
 from sqlalchemy.orm import Session
 import json
 from fastapi.middleware.cors import CORSMiddleware
-# from models import Message, Conversation, User, association_table
-
-# db = SessionLocal()
-# db.query(association_table).delete()
-# db.query(Message).delete()
-# db.query(Conversation).delete()
-# db.query(User).delete()
-# db.commit()
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
