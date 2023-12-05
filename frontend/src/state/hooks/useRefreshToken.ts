@@ -14,7 +14,6 @@ export const useRefreshToken = () => {
         return response.data.access_token;
       }
     } catch (error) {
-      console.log("userefreshtoken ");
       logOut();
     }
   };
