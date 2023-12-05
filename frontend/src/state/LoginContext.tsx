@@ -37,7 +37,7 @@ LoginContext.displayName = "LoginContext";
 const LoginContextProvider = ({ children }: { children: React.ReactNode }) => {
   const { refreshToken } = useRefreshToken();
   const [isLogged, setIsLogged] = useState(false);
-  const [currentUser, setCurrentUser] = useState<string>();
+  const [currentUser, setCurrentUser] = useState<string | undefined>();
 
   const logOut = () => {
     setCurrentUser(undefined);

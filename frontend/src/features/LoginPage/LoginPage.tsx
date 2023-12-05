@@ -5,7 +5,7 @@ import { FormInputText } from "../../components/InputFields/TextInput";
 import { Button, Typography } from "@mui/material";
 import { useEffect, useContext } from "react";
 import axios from "axios";
-import { LoginContext } from "../../state/LoginContext";
+import { LoginContext, getCurrentUserInfo } from "../../state/LoginContext";
 import { currentUserState } from "../../state/recoil/atoms/CurrentUser";
 import { useSetRecoilState } from "recoil";
 
@@ -38,7 +38,7 @@ const LoginPage = ({
   visible: boolean;
 }) => {
   const setUser = useSetRecoilState(currentUserState);
-  const { setIsLoggedIn } = useContext(LoginContext);
+  const { setIsLoggedIn, setCurrentUser } = useContext(LoginContext);
   const { handleSubmit, control, setError, resetField } = useForm<FormValues>({
     defaultValues,
     resolver: yupResolver(validationSchema),
@@ -61,11 +61,13 @@ const LoginPage = ({
     formData.append("password", data.password);
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BASE_API_ENDPOINT}token`,
+        `${process.env.REACT_APP_BASE_API_ENDPOINT}/token`,
         formData
       );
       if (response.data.access_token) {
         localStorage.setItem("access_token", response.data.access_token);
+		const userInfo = getCurrentUserInfo(response.data.access_token)
+		userInfo?.sub && setCurrentUser(userInfo.sub)
         setIsLoggedIn(true);
       }
       if (response.data.refresh_token) {

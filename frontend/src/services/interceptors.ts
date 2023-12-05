@@ -6,8 +6,7 @@ import axios, {
 } from "axios";
 import { getCurrentUserInfo, isExpired } from "../state/LoginContext";
 import { createBrowserHistory } from "history";
-
-const API_URL = process.env.REACT_APP_BASE_API_ENDPOINT;
+import { api } from "./api";
 
 const onRequest = (
   config: InternalAxiosRequestConfig
@@ -54,7 +53,7 @@ export const setupInterceptorsTo = (
           return;
         }
         try {
-          const rs = await axios.post(`${API_URL}refresh`, {
+          const rs = await api.post('/refresh', {
             refresh_token: storedRefreshToken,
           });
 

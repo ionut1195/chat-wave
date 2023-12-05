@@ -19,7 +19,7 @@ const ConversationPage = () => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const { setSelectedConversationId } = useContext(SelectedConversationId);
   const [processedMessages, setProcessedMessages] = useState<MessageType[]>([]);
-
+const webSocketEndpoint = process.env.WEB_SOCKET_ENDPOINT
   useEffect(() => {
     if (id) {
       setSelectedConversationId(+id);
@@ -28,18 +28,18 @@ const ConversationPage = () => {
   }, []);
 
   let socket = useMemo(() => {
-    if (conversation.state === "hasValue") {
+    if (conversation.state === "hasValue" && webSocketEndpoint) {
       const conversation_id = conversation.contents?.id;
       return new WebSocket(
-        `ws://localhost:8000/conversation/${conversation_id}/ws`
+        `${webSocketEndpoint}/conversation/${conversation_id}/ws`
       );
     }
-  }, [conversation]);
+  }, [conversation,webSocketEndpoint]);
 
-  if (socket) {
+  if (socket && webSocketEndpoint) {
     socket.onclose = function (event) {
       setTimeout(function () {
-        socket = new WebSocket("ws://localhost:8000");
+        socket = new WebSocket(webSocketEndpoint);
       }, 5000);
     };
     socket.onopen = () => {

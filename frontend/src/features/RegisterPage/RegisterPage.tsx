@@ -8,6 +8,7 @@ import axios from "axios";
 import { useSetRecoilState } from "recoil";
 import { currentUserState } from "../../state/recoil/atoms/CurrentUser";
 import { LoginContext } from "../../state/LoginContext";
+import { api } from "../../services/api";
 
 export type FormValues = {
   username: string;
@@ -57,8 +58,8 @@ const RegisterForm = ({
   }, [visible, resetField]);
   const onSubmit = async (data: FieldValues) => {
     try {
-      const response = await axios.post(
-        "http://localhost:8000/users/new",
+      const response = await api.post(
+        "/users/new",
         data
       );
       if (response.data) {
