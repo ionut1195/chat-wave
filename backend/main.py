@@ -11,14 +11,19 @@ from database import get_db, Base, engine, SessionLocal
 from sqlalchemy.orm import Session
 import json
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+origins = [
+    os.getenv("FRONTEND_URL"),
+]
+print(origins)
 app = FastAPI()
 Base.metadata.create_all(engine)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://chat-wave-wheat.vercel.app"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -142,10 +147,8 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
 ):
-    print(form_data)
     user = authenticate_user(
         db, form_data.username, form_data.password)
-    print(user)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

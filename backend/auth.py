@@ -60,8 +60,9 @@ def create_token(data: dict, expires_delta: Union[timedelta, None] = None, expir
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
-    except:
-        print("token creation failed")
+    except Exception as e:
+        print("token creation failed", e)
+        raise e
 
 
 def get_refreshed_token(refresh_token: str, expires_delta: Union[timedelta, None] = None):

@@ -75,7 +75,7 @@ def get_conversation(conversation_id: int, db: Session):
 
 
 def get_user_conversations(db: Session, user_id: int, offset: int = 0, limit: int = 10):
-    subquery = select([models.Conversation.id]).join(
+    subquery = select(models.Conversation.id).join(
         models.Conversation.users).where(models.User.id == user_id).as_scalar()
     return db.query(models.Conversation).filter(models.Conversation.id.in_(subquery)).offset(offset).limit(limit).all()
 
