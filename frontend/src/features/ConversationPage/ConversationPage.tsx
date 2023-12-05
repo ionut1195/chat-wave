@@ -19,7 +19,7 @@ const ConversationPage = () => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const { setSelectedConversationId } = useContext(SelectedConversationId);
   const [processedMessages, setProcessedMessages] = useState<MessageType[]>([]);
-const webSocketEndpoint = process.env.WEB_SOCKET_ENDPOINT
+  const webSocketEndpoint = process.env.REACT_APP_WEB_SOCKET_ENDPOINT
   useEffect(() => {
     if (id) {
       setSelectedConversationId(+id);
