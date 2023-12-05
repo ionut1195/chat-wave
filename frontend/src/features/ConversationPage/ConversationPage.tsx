@@ -20,13 +20,14 @@ const ConversationPage = () => {
   const { setSelectedConversationId } = useContext(SelectedConversationId);
   const [processedMessages, setProcessedMessages] = useState<MessageType[]>([]);
   const webSocketEndpoint = process.env.REACT_APP_WEB_SOCKET_ENDPOINT
+  
   useEffect(() => {
     if (id) {
       setSelectedConversationId(+id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
+  console.log(webSocketEndpoint)
   let socket = useMemo(() => {
     if (conversation.state === "hasValue" && webSocketEndpoint) {
       const conversation_id = conversation.contents?.id;
@@ -36,10 +37,10 @@ const ConversationPage = () => {
     }
   }, [conversation,webSocketEndpoint]);
 
-  if (socket && webSocketEndpoint) {
+  if (socket && webSocketEndpoint && conversation.state === "hasValue") {
     socket.onclose = function (event) {
       setTimeout(function () {
-        socket = new WebSocket(webSocketEndpoint);
+        socket = new WebSocket(`${webSocketEndpoint}/conversation/${conversation.contents?.id}/ws`);
       }, 5000);
     };
     socket.onopen = () => {
